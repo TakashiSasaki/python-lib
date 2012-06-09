@@ -3,8 +3,6 @@
 ## Eclipse
 #################
 
-*.pydevproject
-.project
 .metadata
 bin/**
 tmp/**
@@ -23,12 +21,6 @@ local.properties
 
 # Locally stored "Eclipse launch configurations"
 *.launch
-
-# CDT-specific
-.cproject
-
-# PDT-specific
-.buildpath
 
 
 #################
