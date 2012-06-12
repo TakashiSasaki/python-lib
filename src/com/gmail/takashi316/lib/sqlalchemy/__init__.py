@@ -1,34 +1,41 @@
 from __future__ import unicode_literals, print_function 
-from com.gmail.takashi316.lib.sqlite import getSqliteUrl
+from com.gmail.takashi316.lib.sqlite import *
+from com.gmail.takashi316.lib.string import *
+from com.gmail.takashi316.lib.singleton import *
 
 from sqlalchemy import create_engine as _create_engine
 from sqlalchemy.exc import SQLAlchemyError
-_engine = None
-def getEngine(subdirectory, file_stem):
-    if _engine is not None:
-        return _engine
-    _engine = _create_engine(getSqliteUrl(subdirectory, file_stem), echo=False)
-    return _engine
+
+class SqlAlchemyEngine(object):
+    __metaclass__ = SoftSingleton
+    _engine = None
     
+    def __init__(self, subdirectory_ = None, file_stem = None):
+        if self._engine is None:
+            sqlite_url = SqliteUrl(subdirectory_, file_stem)
+            assert isUnicode(sqlite_url())
+            self._engine = _create_engine(sqlite_url(), echo=False)
+        
+    def __call__(self):
+        return self._engine
+    
+    def getEngine(self):
+        return self()
+
+import sqlalchemy.engine.base
+import sqlalchemy.orm.session
 from sqlalchemy.orm.session import sessionmaker as _sessionmaker
-
-_SessionClass = None
-_subdirectory = None
-_file_stem = None
-def _getSessionClass(subdirectory, file_stem):
-    if _SessionClass is not None:
-        if _subdirectory != subdirectory and _file_stem != file_stem:
-            raise SQLAlchemyError("subdirecory and file_stem is not identical that given for the first time.")
-        return _SessionClass
-    _subdirectory = subdirectory
-    _file_stem = file_stem
-    _SessionClass = _sessionmaker(bind=getEngine(subdirectory, file_stem), autocommit=False)
-    return _SessionClass 
-
-def getSession(subdirectory, file_stem):
-    _getSessionClass(subdirectory, file_stem)
-    return _SessionClass()
-
-from unittest import TestCase, main
-if __name__ == "__main__":
-    main()
+class SqlAlchemySessionFactory(object):
+    __metaclass__ = SoftSingleton
+    _sessionClass = None
+    
+    def __init__(self, subdirectory_=None, file_stem=None):
+        engine = SqlAlchemyEngine(subdirectory_, file_stem)()
+        assert isinstance(engine, sqlalchemy.engine.base.Engine)
+        #info (engine.__class__)
+        if self._sessionClass is None:
+            self._sessionClass = _sessionmaker(bind=engine, autocommit=False)
+        #assert isinstance(self._sessionClass, sqlalchemy.orm.session.SessionMaker)
+    
+    def createSqlAlchemySession(self):
+        return self._sessionClass()

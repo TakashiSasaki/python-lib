@@ -1,17 +1,31 @@
 from __future__ import unicode_literals, print_function
-from com.gmail.takashi316.lib.file import getUserDirectory as _getUserDirectory
+from com.gmail.takashi316.lib.file import *
 from com.gmail.takashi316.lib.debug import *
+from com.gmail.takashi316.lib.string import *
+from com.gmail.takashi316.lib.singleton import *
 
-def getSqliteUrl(subdirectory, file_stem):
-    import os.path
-    sqlite_path = os.path.join(_getUserDirectory(subdirectory), file_stem + ".sqlite")
-    info(sqlite_path) 
-    sqlite_path_slash = sqlite_path.replace(os.path.sep, '/')
-    info(sqlite_path_slash)
-    sqlite_url = "sqlite:///" + sqlite_path_slash
-    info(sqlite_url)
-    return sqlite_url
-
-from unittest import TestCase, main
-if __name__ == "__main__":
-    main()
+class SqliteUrl(object):
+    __metaclass__ = SoftSingleton
+    _sqlitePath = None
+    _sqliteUrl = None
+    
+    def __init__(self, subdirectory_ = None, file_stem = None):
+        if isUnicode(self._sqliteUrl): return self._sqliteUrl
+        user_directory = UserDirectory(subdirectory_)
+        if subdirectory_ is None:
+            subdirectory_ = user_directory.getSubdirectory()
+        if file_stem is None:
+            file_stem = subdirectory_
+        self._sqlitePath = os.path.join(user_directory(), file_stem + ".sqlite")
+        sqlite_path_slash = self._sqlitePath.replace(os.path.sep, '/')
+        self._sqliteUrl = "sqlite:///" + sqlite_path_slash
+         
+    def __call__(self):
+        assert isUnicode(self._sqliteUrl)
+        return self._sqliteUrl
+    
+    def __str__(self):
+        return self()
+    
+    def get(self):
+        return self()
