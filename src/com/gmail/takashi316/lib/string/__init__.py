@@ -19,10 +19,19 @@ except:
     isUnicode = _
 
 def isEmptyUnicode(u):
-    assert isUnicode(u)
-    assert len(u) == 0
+    if not isUnicode(u): return False
+    if len(u) == 0: return True
+    return False
 
 def isNonEmptyUnicode(u):
-    assert isUnicode(u)
-    assert len(u) > 0
+    if not  isUnicode(u): return False
+    if len(u) > 0: return True
+    return False
   
+def isBytes(bs):
+    return True if isinstance(bs, bytes) else False
+
+def isEmptyBytes(bs):
+    if not isBytes(bs): return False
+    if len(bs) == 0: return True
+    return False

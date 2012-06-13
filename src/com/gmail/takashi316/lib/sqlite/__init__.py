@@ -10,15 +10,15 @@ class SqliteUrl(object):
     _sqliteUrl = None
     
     def __init__(self, subdirectory_ = None, file_stem = None):
-        if isUnicode(self._sqliteUrl): return self._sqliteUrl
-        user_directory = UserDirectory(subdirectory_)
-        if subdirectory_ is None:
-            subdirectory_ = user_directory.getSubdirectory()
-        if file_stem is None:
-            file_stem = subdirectory_
-        self._sqlitePath = os.path.join(user_directory(), file_stem + ".sqlite")
-        sqlite_path_slash = self._sqlitePath.replace(os.path.sep, '/')
-        self._sqliteUrl = "sqlite:///" + sqlite_path_slash
+        if not isUnicode(self._sqliteUrl):
+            user_directory = UserDirectory(subdirectory_)
+            if subdirectory_ is None:
+                subdirectory_ = user_directory.getSubdirectory()
+            if file_stem is None:
+                file_stem = subdirectory_
+            self._sqlitePath = os.path.join(user_directory(), file_stem + ".sqlite")
+            sqlite_path_slash = self._sqlitePath.replace(os.path.sep, '/')
+            self._sqliteUrl = "sqlite:///" + sqlite_path_slash
          
     def __call__(self):
         assert isUnicode(self._sqliteUrl)
