@@ -9,10 +9,9 @@ class _(TestCase):
     def tearDown(self):
         TestCase.tearDown(self)
     
-    def test(self):
-        self.assertIsInstance("abc", unicode)
-        sqlite_url = SqliteUrl("abc", "xyz")
-        self.assertIsInstance(sqlite_url(), unicode)
+    def testSqliteUrl(self):
+        sqlite_url = SqliteUrl("python-lib", "python-lib")
+        self.assertTrue(isNonEmptyUnicode(sqlite_url()))
 
 if __name__ == "__main__":
     main()
