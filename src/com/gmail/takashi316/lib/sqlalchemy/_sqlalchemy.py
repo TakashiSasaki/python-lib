@@ -2,6 +2,9 @@ from __future__ import unicode_literals, print_function
 from com.gmail.takashi316.lib.debug import *
 from com.gmail.takashi316.lib.sqlalchemy import *
 from com.gmail.takashi316.lib.string import *
+import sqlalchemy.engine
+import sqlalchemy.engine.base
+import sqlalchemy.dialects.sqlite
 
 from unittest import TestCase, main
 class _(TestCase):
