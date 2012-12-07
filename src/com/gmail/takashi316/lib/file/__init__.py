@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from __future__ import unicode_literals, print_function
 from com.gmail.takashi316.lib.singleton import *
 import os, os.path
