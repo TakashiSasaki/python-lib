@@ -4,12 +4,13 @@ import os.path
 from com.gmail.takashi316.lib.file import getModuleName
 
 class ApplicationDirectory(object):
-    __slots__ = ["applicationDirectory", "applicationName"]
+    __slots__ = ["applicationDirectory", "applicationName", "homeDirectory"]
     
     def __init__(self, application_module):
         """application should be a class and its __name__ is used as the name of session file.""" 
         self.applicationName = getModuleName(application_module)
-        self.applicationDirectory = os.getenv("AppData", os.getenv("HOME", ".")) + os.sep + self.applicationName
+        self.applicationDirectory = os.getenv("AppData", os.getenv("HOME", os.path.expanduser("~"))) 
+                                    + os.sep + self.applicationName
         assert isinstance(self.applicationDirectory, str)
         if not os.path.exists(self.applicationDirectory):
             os.mkdir(self.applicationDirectory)
