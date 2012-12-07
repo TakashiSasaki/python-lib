@@ -79,10 +79,10 @@ def _printhex(l):
         print (l.__class__, hex(a)),
     print
 
-SALT = b"diopioahpqu788guahoivanio"
+_SALT = b"diopioahpqu788guahoivanio"
 if __name__ == "__main__":
     import hmac
-    h = hmac.new(SALT)
+    h = hmac.new(_SALT)
     h.update(hex(uuid._windll_getnode()))
     print (h.hexdigest())
     #for x in CLIENT_ID_FOR_INSTALLED_APPLICATIONS["installed"].iteritems():
