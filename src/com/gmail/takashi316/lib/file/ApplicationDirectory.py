@@ -2,8 +2,6 @@
 from __future__ import unicode_literals, print_function
 from inspect import ismodule
 import os.path
-import re
-from time import sleep
 
 class ApplicationDirectory(object):
     __slots__ = ["applicationDirectory", "applicationName"]
