@@ -20,13 +20,13 @@ from unittest import TestCase, main
 class Test(TestCase):
     def setUp(self):
         TestCase.setUp(self)
-        file = open("./hello.py", "a+")
-        file.write("\"\"\"this is a hello module\"\"\"")
-        file.close()
+#        file = open("./hello.py", "a+")
+#        file.write("\"\"\"this is a hello module\"\"\"")
+#        file.close()
     
     def tearDown(self):
         TestCase.tearDown(self)
-        os.remove("./hello.py")
+#        os.remove("./hello.py")
         
     def testGetModuleName(self):
         from com.gmail.takashi316.lib.file import hello
