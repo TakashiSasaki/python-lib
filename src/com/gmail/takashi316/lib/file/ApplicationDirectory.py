@@ -9,7 +9,7 @@ class ApplicationDirectory(object):
     def __init__(self, application_module):
         """application should be a class and its __name__ is used as the name of session file.""" 
         self.applicationName = getModuleName(application_module)
-        self.applicationDirectory = os.getenv("AppData", os.getenv("HOME", os.path.expanduser("~"))) + os.sep + self.applicationName
+        self.applicationDirectory = os.getenv("AppData", os.getenv("HOME", os.path.expanduser("~"))) + os.sep + self.applicationName + os.sep
         assert isinstance(self.applicationDirectory, str)
         if not os.path.exists(self.applicationDirectory):
             os.mkdir(self.applicationDirectory)
