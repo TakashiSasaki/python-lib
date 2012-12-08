@@ -40,17 +40,25 @@ class Aes(object):
         assert isinstance(self._iv, str) or isinstance(self._iv, bytearray)
         return base64.b64encode(self._iv)
     
-    def setKey(self, key_base64=None):
-        if key_base64 is None:
-            ba = bytearray(16)
-            for x in range(16):
-                ba[x] = randint(0, 255)
-            self._key = ba
-            return
+    def setKey(self, key_base64):
+        assert len(key_base64) == 24
         key = base64.b64decode(key_base64)
         assert len(key) == 16
         self._key = bytearray(key)
+        
+    def setKeyByRandomNumber(self):
+        ba = bytearray(16)
+        for x in range(16):
+            ba[x] = randint(0, 255)
+        self._key = ba
 
+    def setKeyByMacAddress(self, salt=b"9)'87qugaoiuqwk~a+>&uq9fao$#1"):
+        import hmac
+        h = hmac.new(salt)
+        h.update(hex(uuid._windll_getnode()))
+        self._key = bytearray(h.digest())
+        assert len(self._key) == 16
+        
     def getKey(self):
         assert isinstance(self._key, str) or isinstance(self._key, bytearray)
         return base64.b64encode(self._key)
@@ -80,35 +88,47 @@ class Aes(object):
         assert isinstance(ciph, list)
         return ciph
     
-    def decryptIntListToUnicode(self, encrypted_int_list):
+    def decryptIntListToUnicode(self, encrypted_int_list, encoding="utf8"):
         assert isinstance(encrypted_int_list, list) or isinstance(encrypted_int_list, bytearray)
-        decrypted_bytearray = self.decryptIntListToStr(encrypted_int_list)
-        assert isinstance(decrypted_bytearray, str)
-        split_decrypted_bytearray = decrypted_bytearray.split("\0")
-        assert isinstance(split_decrypted_bytearray, list)
-        truncated_decrypted_bytearray = split_decrypted_bytearray[0]
-        assert isinstance(truncated_decrypted_bytearray, unicode)
+        decrypted_str = self.decryptIntListToStr(encrypted_int_list)
+        assert isinstance(decrypted_str, str)
+        split_decrypted_str = decrypted_str.split(b"\0")
+        assert isinstance(split_decrypted_str, list)
+        truncated_decrypted_str = split_decrypted_str[0]
+        assert isinstance(truncated_decrypted_str, str)
         #x = truncated_decrypted_bytearray.decode("utf8")
         #assert isinstance(x, unicode)
-        return truncated_decrypted_bytearray
+        return truncated_decrypted_str.decode(encoding)
     
-    def encryptUnicodeToIntList(self, clear_unicode):
+    def encryptUnicodeToIntList(self, clear_unicode, encoding="utf8"):
         assert isinstance(clear_unicode, unicode)
-        clear_utf8_str = clear_unicode.encode("utf8")
-        assert isinstance(clear_utf8_str, str)
-        encrypted_int_list = self.encryptStrToIntList(clear_utf8_str)
+        clear_str = clear_unicode.encode(encoding)
+        assert isinstance(clear_str, str)
+        encrypted_int_list = self.encryptStrToIntList(clear_str)
         return encrypted_int_list
     
-    def encryptUnicodeToBase64(self, clear_unicode):
-        encrypted_bytearray = bytearray(self.encryptUnicodeToIntList(clear_unicode))
+    def encryptUnicodeToBase64(self, clear_unicode, encoding="utf8"):
+        assert isinstance(clear_unicode, unicode)
+        clear_str = clear_unicode.encode(encoding)
+        return self.encryptStrToBase64(clear_str)
+        #enctypted_int_list = self.encryptStrToIntList(clear_str)
+        #encrypted_bytearray = bytearray(enctypted_int_list)
+        #encrypted_base64 = base64.b64encode(encrypted_bytearray)
+        #return encrypted_base64
+
+    def encryptStrToBase64(self, clear_str):
+        assert isinstance(clear_str, str)
+        enctypted_int_list = self.encryptStrToIntList(clear_str)
+        encrypted_bytearray = bytearray(enctypted_int_list)
         encrypted_base64 = base64.b64encode(encrypted_bytearray)
         return encrypted_base64
         
-    def decryptBase64ToUnicode(self, encrypted_base64):
+        
+    def decryptBase64ToUnicode(self, encrypted_base64, encoding="utf8"):
         encrypted_str = b64decode(encrypted_base64)
         isinstance(encrypted_str, str)
         encrypted_bytearray = bytearray(encrypted_str)
-        decrypted_unicode = self.decryptIntListToUnicode(encrypted_bytearray)
+        decrypted_unicode = self.decryptIntListToUnicode(encrypted_bytearray, encoding)
         return decrypted_unicode
 
 def _printhex(l):
@@ -151,14 +171,18 @@ class _Test(TestCase):
         h = hmac.new(_SALT)
         h.update(hex(uuid._windll_getnode()))
         hex_digest = h.hexdigest()
-        self.assertEqual(len(hex_digest), 32)
         self.assertIsInstance(hex_digest, str)
+        self.assertEqual(len(hex_digest), 32)
         assert isinstance(hex_digest, str)
         from re import match
         m = match("^[0-9a-f]+$", hex_digest)
         self.assertIsNotNone(m)
         m = match("^[xyz]+$", hex_digest)
         self.assertIsNone(m)
+        
+        binary_digest = h.digest()
+        assert isinstance(binary_digest, str)
+        assert len(binary_digest) == 16
 
 class TestAes(TestCase):
     __slots__ = ["aes"]
@@ -174,8 +198,10 @@ class TestAes(TestCase):
         
     def testKey(self):
         self.assertRaises(AttributeError, self.aes.getKey)
-        self.aes.setKey()
+        self.aes.setKeyByRandomNumber()
         key = self.aes.getKey()
+        self.assertIsInstance(key, str)
+        self.assertEqual(len(key), 24)
         self.assertRegexpMatches(key, "^[0-9a-zA-Z+/]+=*$")
         self.aes.setKey(self.aes.getKey())
         self.assertEqual(key, self.aes.getKey())
@@ -189,7 +215,7 @@ class TestAes(TestCase):
         self.assertEqual(iv, self.aes.getIv())
     
     def testUnicode(self):
-        self.aes.setKey()
+        self.aes.setKeyByRandomNumber()
         self.aes.setIv()
         encrypted_int_list = self.aes.encryptUnicodeToIntList(self.unicodeText)
         decrypted_unicode = self.aes.decryptIntListToUnicode(encrypted_int_list)
@@ -197,20 +223,38 @@ class TestAes(TestCase):
         self.assertEqual(self.unicodeText, decrypted_unicode)
         
     def testString(self):
-        self.aes.setKey()
+        self.aes.setKeyByRandomNumber()
         self.aes.setIv()
         encrypted_int_list = self.aes.encryptStrToIntList(self.stringText)
         decrypted_str = self.aes.decryptIntListToStr(encrypted_int_list)
         self.assertEqual(self.stringText, decrypted_str)
     
     def testBase64(self):
-        self.aes.setKey()
+        self.aes.setKeyByRandomNumber()
         self.aes.setIv()
         encrypted_base64 = self.aes.encryptUnicodeToBase64(self.unicodeText)
         assert isinstance(encrypted_base64, str)
         decrypted_unicode = self.aes.decryptBase64ToUnicode(encrypted_base64)
         assert isinstance(decrypted_unicode, unicode)
         self.assertEqual(self.unicodeText, decrypted_unicode)
+        
+    def testTwoKeys(self):
+        aes1 = Aes()
+        aes1.setKeyByMacAddress()
+        aes1.setIv()
+        aes2 = Aes()
+        aes2.setKeyByMacAddress()
+        aes2.setIv()
+        #self.assertEqual(aes2.getKey(), aes1.getKey())
+        #self.aes.setKey()
+        
+    def testSetKeyByMacAddress(self):
+        self.aes.setKeyByMacAddress()
+        self.aes.setIv()
+        c = u"本日は雨天なり"
+        e = self.aes.encryptUnicodeToBase64(c)
+        d = self.aes.decryptBase64ToUnicode(e)
+        self.assertEqual(c, d)
 
 if __name__ == "__main__":
     main()    
