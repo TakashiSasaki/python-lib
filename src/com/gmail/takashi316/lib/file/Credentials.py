@@ -115,13 +115,13 @@ class _Test(TestCase):
                                  "C:\\\\Users\\\\[^\\\\]+\\\\AppData\\\\Roaming\\\\com\\.gmail\\.takashi316\\.lib\\.file\\.hello\\\\settings[0-9]+\\.txt")
 
     def testJson(self):
-        bb_json = json.dumps({b"ãƒã‚¤ãƒˆã‚¹ãƒˆãƒªãƒ³ã‚°": b"ãƒã‚¤ãƒˆã‚¹ãƒˆãƒªãƒ³ã‚°"})
+        bb_json = json.dumps({b"ƒoƒCƒgƒXƒgƒŠƒ“ƒO": b"ƒoƒCƒgƒXƒgƒŠƒ“ƒO"})
         self.assertIsInstance(bb_json, str)
-        bu_json = json.dumps({b"ãƒã‚¤ãƒˆã‚¹ãƒˆãƒªãƒ³ã‚°": u"ãƒ¦ãƒ‹ã‚³ãƒ¼ãƒ‰"})
+        bu_json = json.dumps({b"ƒoƒCƒgƒXƒgƒŠƒ“ƒO": u"ƒ†ƒjƒR[ƒh"})
         self.assertIsInstance(bu_json, str)
-        ub_json = json.dumps({u"ãƒ¦ãƒ‹ã‚³ãƒ¼ãƒ‰": b"ãƒã‚¤ãƒˆã‚¹ãƒˆãƒªãƒ³ã‚°"})
+        ub_json = json.dumps({u"ƒ†ƒjƒR[ƒh": b"ƒoƒCƒgƒXƒgƒŠƒ“ƒO"})
         self.assertIsInstance(ub_json, str)
-        uu_json = json.dumps({u"ãƒã‚¤ãƒˆã‚¹ãƒˆãƒªãƒ³ã‚°": u"ãƒ¦ãƒ‹ã‚³ãƒ¼ãƒ‰"})
+        uu_json = json.dumps({u"ƒoƒCƒgƒXƒgƒŠƒ“ƒO": u"ƒ†ƒjƒR[ƒh"})
         self.assertIsInstance(uu_json, str)
 
     def testSettings(self):
