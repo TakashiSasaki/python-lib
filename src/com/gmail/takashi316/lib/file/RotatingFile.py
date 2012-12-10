@@ -122,7 +122,7 @@ class RotatingFile(object):
     
     def __str__(self):
         s = self.getCurrentFilePath()
-        assert isinstance(s, str)
+        assert isinstance(s, unicode)
         return s
     
     def __unicode__(self):
