@@ -7,85 +7,45 @@ from com.gmail.takashi316.lib.aes import Aes
 
 class ApplicationSettings(object):
     
-    __slots__ = ["settings", "credentials", "settingsRotatingFile", "credentialsRotatingFile"]
+    __slots__ = ["settings", "settingsRotatingFile"]
     
     def __init__(self, application_module):
         application_directory = ApplicationDirectory(application_module)
         application_directory_path = application_directory.getApplicationDirectoryPath()
         self.settingsRotatingFile = RotatingFile(application_directory_path, "settings")
-        self.credentialsRotatingFile = RotatingFile(application_directory_path, "credentials")
         self.settings = {}
-        self.credentials = {}
         #self.load()
 
     def save(self):
-        self.saveSettings()
-        self.saveCredentials()
-            
-    def saveSettings(self):
         self.settingsRotatingFile.rotate()
         settings_file = self.settingsRotatingFile.openLast()
         json.dump(self.settings, settings_file)
         settings_file.close()
-
-    def saveCredentials(self):
-        self.credentialsRotatingFile.rotate()
-        credentials_json = json.dumps(self.credentials)
-        assert isinstance(credentials_json, str)
-        aes = Aes()
-        aes.setIv()
-        aes.setKeyByMacAddress()
-        encrypted_credentials = aes.encryptStrToBase64(credentials_json)
-        
-        d = aes.decryptBase64ToUnicode(encrypted_credentials)
-        assert credentials_json == d
-
-        encrypted_json_object = {"iv": aes.getIv(), "encrypted_credentials": encrypted_credentials}
-        encrypted_json_str = json.dumps(encrypted_json_object)
-        assert isinstance(encrypted_json_str, str)
-        assert len(encrypted_json_str) > 0
-        credentials_file = self.credentialsRotatingFile.openLast()
-        credentials_file.write(encrypted_json_str)
-        credentials_file.close()
         
     def load(self):
-        self.loadSettings()
-        self.loadCredentials()
-            
-    def loadSettings(self):
         settings_file = self.settingsRotatingFile.openLast()
         try:
             self.settings = json.load(settings_file, "utf8")
         except ValueError:
             self.settings = {}
+            
+    def clear(self):
+        self.settings = {}
+        self.save()
 
-    def loadCredentials(self):
-        credentials_file = self.credentialsRotatingFile.openLast()
-        try:
-            encrypted_json = json.load(credentials_file, "utf8")
-        except ValueError:
-            self.credentials = {}
-            return
-        aes = Aes()
-        aes.setIv(encrypted_json["iv"])
-        aes.setKeyByMacAddress()
-        credentials_json = aes.decryptBase64ToUnicode(encrypted_json["encrypted_credentials"])
-        self.credentials = json.loads(credentials_json)
-    
     def setSetting(self, key, value):
         assert isinstance(key, unicode)
         self.settings[key] = value
     
-    def getSetting(self, key):
+    def get(self, key, default = None):
         assert isinstance(key, unicode)
-        return self.settings[key]
+        return self.settings.get(key, default)
+    
+    def has_key(self, key):
+        return key in self.settings.keys()
     
     def clearSettings(self):
         self.settings = {}
-    
-    def setCredential(self, key, value):
-        assert isinstance(key, unicode)
-        self.credentials[key] = value
     
     def getCredential(self, key):
         assert isinstance(key, unicode)
@@ -107,10 +67,6 @@ class _Test(TestCase):
         TestCase.tearDown(self)
         
     def testFilePats(self):
-        #print (self.applicationSettings.credentialsRotatingFile)
-        self.assertRegexpMatches(self.applicationSettings.credentialsRotatingFile.__str__(),
-                                 "C:\\\\Users\\\\[^\\\\]+\\\\AppData\\\\Roaming\\\\com\\.gmail\\.takashi316\\.lib\\.file\\.hello\\\\credentials[0-9]+\\.txt")
-        #print (self.applicationSettings.settingsRotatingFile)
         self.assertRegexpMatches(self.applicationSettings.settingsRotatingFile.__str__(),
                                  "C:\\\\Users\\\\[^\\\\]+\\\\AppData\\\\Roaming\\\\com\\.gmail\\.takashi316\\.lib\\.file\\.hello\\\\settings[0-9]+\\.txt")
 
@@ -126,25 +82,15 @@ class _Test(TestCase):
 
     def testSettings(self):
         self.applicationSettings.setSetting("testkey", "testvalue")
+        self.assert_(self.applicationSettings.has_key("testkey"))
         self.applicationSettings.setSetting("testkey2", "testvalue2")
-        self.assertEqual(self.applicationSettings.getSetting("testkey"), "testvalue")
-        self.assertEqual(self.applicationSettings.getSetting("testkey2"), "testvalue2")
-        self.applicationSettings.saveSettings()
+        self.assertEqual(self.applicationSettings.get("testkey"), "testvalue")
+        self.assertEqual(self.applicationSettings.get("testkey2"), "testvalue2")
+        self.applicationSettings.save()
         self.applicationSettings.clearSettings()
-        self.applicationSettings.loadSettings()
-        self.assertEqual(self.applicationSettings.getSetting("testkey"), "testvalue")
-        self.assertEqual(self.applicationSettings.getSetting("testkey2"), "testvalue2")
-
-    def testCredentials(self):
-        self.applicationSettings.setCredential("testkey3", "testvalue3")
-        self.assertEqual(self.applicationSettings.getCredential("testkey3"), "testvalue3")
-        self.applicationSettings.saveCredentials()
-        file = self.applicationSettings.credentialsRotatingFile.openLast()
-        #for x in file:
-        #    print(x)
-        self.applicationSettings.clearCredentials()
-        self.applicationSettings.loadCredentials()
-        self.assertEqual(self.applicationSettings.getCredential("testkey3"), "testvalue3")
+        self.applicationSettings.load()
+        self.assertEqual(self.applicationSettings.get("testkey"), "testvalue")
+        self.assertEqual(self.applicationSettings.get("testkey2"), "testvalue2")
         
 if __name__ == "__main__":
     main()
